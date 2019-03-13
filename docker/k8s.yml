@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: odkaggregate-deployment
+  labels:
+    app: odkaggregate
+
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: odkaggregate
+  template:
+    metadata:
+      labels:
+        app: odkaggregate
+    spec: 
+     volumes:
+      - name: config-volume
+        secret:
+          secretName: odkaggregate-config
+     containers: 
+        - name: odkaggregate
+          image: aggregate:v2.0.1-11-g51f480e0-dirty
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+
+          ports: 
+            - containerPort: 8080
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:  
+  name: odkaggregate-config
+type: Opaque
+stringData:
+  jdbc.properties: |
+    jdbc.driverClassName=org.postgresql.Driver
+    jdbc.resourceName=jdbc/odk_aggregate
+    jdbc.url=jdbc:postgresql://127.0.0.1/aggregate?autoDeserialize=true
+    jdbc.username=hello-world
+    jdbc.password=aggregate
+    jdbc.schema=aggregate
+  security.properties: |
+    security.server.deviceAuthentication=digest
+    security.server.secureChannelType=REQUIRES_INSECURE_CHANNEL
+    security.server.channelType=REQUIRES_INSECURE_CHANNEL
+    security.server.forceHttpsLinks=false
+    security.server.hostname=
+    security.server.port=8080
+    security.server.securePort=8443
+    security.server.superUserUsername=administrator
+    security.server.realm.realmString=ODK Aggregate
+
